@@ -35,7 +35,7 @@ export function InsightsPanel({ branch }) {
 
       <StaleLeadsCard data={stale_leads} branch={branch} />
       <TargetRiskCard data={target_risk} branch={branch} />
-      <DropOffCard data={funnel_dropoff} showSources={!query.source} />
+      <DropOffCard data={funnel_dropoff} />
       <SummariesCard summaries={branch_summaries} scopedBranch={branch} month={query.month} />
     </div>
   );
@@ -60,21 +60,21 @@ function StaleLeadsCard({ data, branch }) {
       <CardHeader
         title="Stale leads"
         subtitle={`Open, no activity in ${data.threshold_days}+ days`}
-        right={<span className="nums text-sm font-semibold text-bad">{num(data.total)}</span>}
+        right={<span className="nums text-sm font-bold text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/20">{num(data.total)}</span>}
       />
       <div className="card-pad space-y-3">
-        <div className="rounded-lg bg-bad-soft px-3 py-2 text-xs text-ink-soft">
-          <span className="font-semibold text-bad">{inr(data.value_at_risk)}</span> of pipeline value sitting idle.
+        <div className="rounded-lg bg-rose-500/10 border border-rose-500/20 px-3.5 py-2.5 text-xs text-ink-soft">
+          <span className="font-bold text-rose-400">{inr(data.value_at_risk)}</span> of pipeline value sitting idle.
         </div>
         {o && (
-          <div className="rounded-lg border border-line px-3 py-2 text-xs">
-            <div className="eyebrow">Oldest</div>
-            <div className="mt-1 font-medium text-ink">
+          <div className="rounded-lg border border-line bg-surface/40 px-3.5 py-2.5 text-xs">
+            <div className="eyebrow text-accent">Oldest lead</div>
+            <div className="mt-1 font-semibold text-ink">
               {o.customer_name} · {o.model_interested}
             </div>
             <div className="mt-0.5 text-ink-soft">
               {stageLabel(o.status)} · {o.branch} · {o.rep} · idle {relativeDays(o.days_since_activity)} ·{" "}
-              {inr(o.deal_value)}
+              <span className="font-semibold text-ink">{inr(o.deal_value)}</span>
             </div>
           </div>
         )}
@@ -84,28 +84,26 @@ function StaleLeadsCard({ data, branch }) {
               <Link
                 key={b.branch_id}
                 href={withFilters(`/branches/${b.branch_id}`)}
-                className="flex items-center justify-between rounded-md px-2 py-1 text-xs hover:bg-canvas"
+                className="flex items-center justify-between rounded-md px-2.5 py-1.5 text-xs hover:bg-cardHover transition"
               >
-                <span className="text-ink-soft">{b.name}</span>
-                <span className="nums font-medium text-ink">
-                  {num(b.count)} · {inr(b.value_at_risk)}
+                <span className="text-ink-soft font-medium">{b.name}</span>
+                <span className="nums font-semibold text-ink">
+                  {num(b.count)} · <span className="text-rose-400">{inr(b.value_at_risk)}</span>
                 </span>
               </Link>
             ))}
           </div>
         )}
         {data.by_rep.length > 0 && (
-          <div>
-            <div className="eyebrow mb-1">Reps to nudge</div>
-            <div className="space-y-1">
+          <div className="pt-2 border-t border-line/60">
+            <div className="eyebrow mb-1.5 text-ink-faint">Reps to nudge</div>
+            <div className="space-y-1.5">
               {data.by_rep.slice(0, 5).map((r) => (
                 <div key={r.rep_id} className="flex items-center justify-between text-xs">
                   <span className="text-ink-soft">
                     {r.name} <span className="text-ink-faint">· {r.branch}</span>
                   </span>
-                  <span className="nums font-medium text-ink">
-                    {num(r.count)} {r.count === 1 ? "lead" : "leads"}
-                  </span>
+                  <span className="nums font-bold text-ink bg-surface px-2 py-0.5 rounded border border-line">{num(r.count)} leads</span>
                 </div>
               ))}
             </div>
@@ -130,17 +128,17 @@ function TargetRiskCard({ data, branch }) {
         subtitle={pace}
         right={
           !branch && (
-            <span className="nums text-sm font-semibold text-warn">
-              {data.at_risk_count}/{data.branches.length}
+            <span className="nums text-xs font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+              {data.at_risk_count}/{data.branches.length} at risk
             </span>
           )
         }
       />
-      <div className="divide-y divide-line">
+      <div className="divide-y divide-line/60">
         {rows.map((b) => (
-          <div key={b.branch_id} className="flex items-center justify-between gap-3 px-5 py-2.5">
+          <div key={b.branch_id} className="flex items-center justify-between gap-3 px-5 py-2.5 hover:bg-cardHover/40 transition">
             <div className="min-w-0">
-              <div className="truncate text-xs font-medium text-ink">{b.name}</div>
+              <div className="truncate text-xs font-semibold text-ink">{b.name}</div>
               <div className="nums text-[11px] text-ink-faint">
                 {num(b.units_delivered)} / {num(b.target_units)} units
                 {!data.month_over && b.projected_units !== b.units_delivered && (
@@ -149,7 +147,7 @@ function TargetRiskCard({ data, branch }) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="nums text-xs font-semibold text-ink">{pct(b.projected_attainment)}</span>
+              <span className="nums text-xs font-bold text-ink">{pct(b.projected_attainment)}</span>
               <StatusPill status={b.verdict} />
             </div>
           </div>
@@ -160,7 +158,7 @@ function TargetRiskCard({ data, branch }) {
 }
 
 /* --------------------------------------------------------------------- */
-function DropOffCard({ data, showSources = true }) {
+function DropOffCard({ data }) {
   const { withFilters } = useFilters();
   const w = data.org_worst;
   return (
@@ -168,9 +166,9 @@ function DropOffCard({ data, showSources = true }) {
       <CardHeader title="Funnel drop-off" subtitle="Where the group leaks the most leads" />
       <div className="card-pad space-y-3">
         {w ? (
-          <div className="rounded-lg bg-accent-soft px-3 py-2 text-xs text-ink-soft">
-            Biggest leak: <span className="font-semibold text-ink">{stageLabel(w.from)} → {stageLabel(w.to)}</span>{" "}
-            loses <span className="font-semibold text-bad">{pct(w.drop_pct)}</span> ({num(w.drop_count)} leads)
+          <div className="rounded-lg bg-sky-500/10 border border-sky-500/20 px-3.5 py-2.5 text-xs text-ink-soft">
+            Biggest leak: <span className="font-bold text-accent">{stageLabel(w.from)} → {stageLabel(w.to)}</span>{" "}
+            loses <span className="font-bold text-rose-400">{pct(w.drop_pct)}</span> ({num(w.drop_count)} leads)
             of the {num(w.reached)} that get there.
           </div>
         ) : (
@@ -179,18 +177,18 @@ function DropOffCard({ data, showSources = true }) {
 
         {data.by_branch.length > 0 && (
           <div>
-            <div className="eyebrow mb-1">Worst stage by branch</div>
+            <div className="eyebrow mb-1 text-ink-faint">Worst stage by branch</div>
             <div className="space-y-1">
               {data.by_branch.slice(0, 5).map((b) => (
                 <Link
                   key={b.branch_id}
                   href={withFilters(`/branches/${b.branch_id}`)}
-                  className="flex items-center justify-between rounded-md px-2 py-1 text-xs hover:bg-canvas"
+                  className="flex items-center justify-between rounded-md px-2.5 py-1 text-xs hover:bg-cardHover transition"
                 >
                   <span className="text-ink-soft">{b.name}</span>
-                  <span className="text-ink">
+                  <span className="text-ink font-medium">
                     {stageLabel(b.from)} → {stageLabel(b.to)}{" "}
-                    <span className="nums font-medium text-bad">−{pct(b.drop_pct)}</span>
+                    <span className="nums font-bold text-rose-400">−{pct(b.drop_pct)}</span>
                   </span>
                 </Link>
               ))}
@@ -198,21 +196,21 @@ function DropOffCard({ data, showSources = true }) {
           </div>
         )}
 
-        {showSources && data.by_source.length > 0 && (
-          <div>
-            <div className="eyebrow mb-1">Source quality (conversion)</div>
-            <div className="space-y-1">
+        {data.by_source.length > 0 && (
+          <div className="pt-2 border-t border-line/60">
+            <div className="eyebrow mb-1 text-ink-faint">Source conversion quality</div>
+            <div className="space-y-1.5">
               {data.by_source.map((s) => (
                 <div key={s.source} className="flex items-center gap-2 text-xs">
-                  <span className="w-24 shrink-0 text-ink-soft">{sourceLabel(s.source)}</span>
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line">
+                  <span className="w-24 shrink-0 text-ink-soft font-medium">{sourceLabel(s.source)}</span>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-line/80">
                     <div
-                      className="h-full rounded-full bg-accent"
+                      className="h-full rounded-full bg-gradient-to-r from-blue-600 to-sky-400"
                       style={{ width: `${Math.max(2, s.conversion_rate * 100)}%` }}
                     />
                   </div>
-                  <span className="nums w-10 text-right font-medium text-ink">{pct(s.conversion_rate)}</span>
-                  <span className="nums w-8 text-right text-ink-faint">{num(s.leads)}</span>
+                  <span className="nums w-10 text-right font-bold text-ink">{pct(s.conversion_rate)}</span>
+                  <span className="nums w-8 text-right text-ink-faint font-semibold">{num(s.leads)}</span>
                 </div>
               ))}
             </div>
@@ -233,10 +231,10 @@ function SummariesCard({ summaries, scopedBranch, month }) {
         title="Branch readouts"
         subtitle={month && month !== "all" ? `Paced against ${monthLabel(month)}` : "Paced against December"}
       />
-      <div className="divide-y divide-line">
+      <div className="divide-y divide-line/60">
         {rows.map((s) => (
-          <div key={s.branch_id} className="px-5 py-3">
-            <div className="mb-1 text-xs font-semibold text-ink">{s.name}</div>
+          <div key={s.branch_id} className="px-5 py-3 hover:bg-cardHover/30 transition">
+            <div className="mb-1 text-xs font-bold text-accent">{s.name}</div>
             <p className="text-xs leading-relaxed text-ink-soft">{s.text}</p>
           </div>
         ))}

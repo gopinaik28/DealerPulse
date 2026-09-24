@@ -52,10 +52,12 @@ npm run sanity           # recomputes headline figures straight from the raw JSO
 | Endpoint | Purpose |
 |---|---|
 | `GET /api/meta` | Bootstrap: branches, months, sources, the fixed `as_of` clock |
-| `GET /api/overview?month=&source=` | Org KPIs, branch comparison, funnel, 7-month trend |
+| `GET /api/overview?month=&source=` | Org KPIs, branch comparison, funnel, 7-month trend, lost & delay logistics |
+| `GET /api/leaderboard?month=&branch=` | Sales officer rankings with target deficits, win rates, and volume |
+| `GET /api/leads?month=&branch=&stage=&source=` | Master list of all 510 leads with days in stage and rep assignments |
 | `GET /api/branches/{branch_id}?month=&source=` | Branch KPIs, rep ranking, branch funnel/trend |
 | `GET /api/reps/{rep_id}?month=&source=` | Rep KPIs, rep funnel, full lead list |
-| `GET /api/insights?month=&source=&branch=&threshold_days=` | Stale leads, target risk, funnel drop-off, branch readouts |
+| `GET /api/insights?month=&source=&branch=&threshold_days=` | Stale leads (27), target risk, funnel drop-off, branch readouts |
 
 `month` is `YYYY-MM` (2025-06 … 2025-12) or `all`. `source` is one of
 `walk_in, website, referral, social_media, phone_enquiry, auto_expo`.

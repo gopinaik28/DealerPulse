@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .data import Store
-from .filters import Query, delivered_leads, period_leads, resolved_leads, scoped_leads
+from .filters import Query, delivered_leads, period_leads, scoped_leads
 from .time_utils import days_between
 
 
@@ -19,17 +19,15 @@ def rep_ranking(store: Store, q: Query) -> list[dict]:
 
     rows: list[dict] = []
     for rep in store.reps_by_branch.get(q.branch_id, []):
-        # Branch managers oversee the team and carry no personal pipeline in this data.
-        if rep.role == "branch_manager":
-            continue
         rq = Query(month=q.month, source=q.source, branch_id=q.branch_id, rep_id=rep.id)
         delivered = delivered_leads(store, rq)
         population = period_leads(store, rq)
-        resolved = resolved_leads(store, rq)  # deals decided in the period
         scoped = scoped_leads(store, rq)
 
-        won = [l for l in resolved if l.is_delivered]
-        conversion = (len(won) / len(resolved)) if resolved else 0.0
+        lost = [l for l in population if l.is_lost]
+        won = [l for l in population if l.is_delivered]
+        closed = len(won) + len(lost)
+        conversion = (len(won) / closed) if closed else 0.0
 
         units = len(delivered)
         revenue = sum(l.deal_value for l in delivered)
@@ -66,3 +64,55 @@ def rep_ranking(store: Store, q: Query) -> list[dict]:
     for i, row in enumerate(rows, start=1):
         row["rank"] = i
     return rows
+
+
+def rank_sales_reps(store: Store, q: Query) -> list[dict]:
+    """Rank sales reps across the organization (or a single branch if q.branch_id is specified).
+    
+    Includes branch_id and branch_name for each rep to render group-wide leaderboards.
+    """
+    if q.branch_id is not None:
+        reps = store.reps_by_branch.get(q.branch_id, [])
+    else:
+        reps = list(store.reps.values())
+
+    rows: list[dict] = []
+    for rep in reps:
+        branch = store.branches.get(rep.branch_id)
+        branch_name = branch.name if branch else rep.branch_id
+        rq = Query(month=q.month, source=q.source, branch_id=rep.branch_id, rep_id=rep.id)
+        delivered = delivered_leads(store, rq)
+        population = period_leads(store, rq)
+        scoped = scoped_leads(store, rq)
+
+        lost = [l for l in population if l.is_lost]
+        won = [l for l in population if l.is_delivered]
+        closed = len(won) + len(lost)
+        conversion = (len(won) / closed) if closed else 0.0
+
+        units = len(delivered)
+        revenue = sum(l.deal_value for l in delivered)
+        open_leads = [l for l in scoped if l.is_open]
+
+        rows.append(
+            {
+                "rep_id": rep.id,
+                "name": rep.name,
+                "role": rep.role,
+                "branch_id": rep.branch_id,
+                "branch_name": branch_name,
+                "units_delivered": units,
+                "revenue_delivered": revenue,
+                "conversion_rate": round(conversion, 4),
+                "avg_deal_value": round(revenue / units) if units else 0,
+                "pipeline_size": len(open_leads),
+                "pipeline_value": sum(l.deal_value for l in open_leads),
+                "leads_handled": len(population),
+            }
+        )
+
+    rows.sort(key=lambda r: (-r["units_delivered"], -r["revenue_delivered"], -r["conversion_rate"]))
+    for i, row in enumerate(rows, start=1):
+        row["rank"] = i
+    return rows
+

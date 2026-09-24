@@ -60,7 +60,7 @@ export function ScopeKpis({ kpis, scope = "org" }) {
       <KpiGrid cols={4}>
         <KpiCard label={scope === "rep" ? "Leads handled" : "Leads created"} value={num(kpis.total_leads)} foot={`${num(kpis.open_leads)} still open`} />
         <KpiCard label="Open pipeline" value={num(kpis.pipeline_size)} foot={`${inr(kpis.pipeline_value, { decimals: 1 })} of value`} />
-        <KpiCard label="Deals lost" value={num(kpis.lost_leads)} foot="lost decisions in the period" />
+        <KpiCard label="Lost (in period)" value={num(kpis.lost_leads)} foot="leads created then lost" />
         <KpiCard
           label="Deals resolved"
           value={num(kpis.resolved_in_period)}

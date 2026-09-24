@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from dealerpulse import insights as insights_mod  # noqa: E402
 from dealerpulse import metrics, rankings  # noqa: E402
 from dealerpulse.data import get_store  # noqa: E402
-from dealerpulse.filters import Query, period_leads  # noqa: E402
+from dealerpulse.filters import Query, delivered_leads, period_leads, scoped_leads  # noqa: E402
 from dealerpulse.funnel import funnel_stats, stages_as_dicts  # noqa: E402
 from dealerpulse.leads import DEFAULT_STALE_DAYS, serialize_lead  # noqa: E402
 from dealerpulse.models import FUNNEL_STAGES, LEAD_SOURCES  # noqa: E402
@@ -95,7 +95,7 @@ def meta() -> dict:
 
 @api.get("/overview")
 def overview(month: str = MonthParam, source: str | None = SourceParam) -> dict:
-    """Org-wide KPIs, worst-first branch comparison, funnel and 7-month trend."""
+    """Org-wide KPIs, worst-first branch comparison, funnel, 7-month trend, and lost/delay breakdowns."""
     store = get_store()
     q = Query(month=parse_month(month), source=parse_source(source))
     return {
@@ -104,6 +104,8 @@ def overview(month: str = MonthParam, source: str | None = SourceParam) -> dict:
         "branch_comparison": metrics.branch_comparison(store, q),
         "funnel": _funnel_block(period_leads(store, q)),
         "trend": metrics.trend(store, q),
+        "lost_reasons": metrics.lost_reasons_breakdown(store, q),
+        "delivery_delays": metrics.delivery_delays_breakdown(store, q),
     }
 
 
@@ -111,21 +113,18 @@ def overview(month: str = MonthParam, source: str | None = SourceParam) -> dict:
 def branch_detail(
     branch_id: str, month: str = MonthParam, source: str | None = SourceParam
 ) -> dict:
-    """Branch-scoped KPIs, rep ranking within the branch, branch funnel and trend."""
+    """Branch-scoped KPIs, rep ranking within the branch, branch funnel, trend, and breakdowns."""
     store = get_store()
     if branch_id not in store.branches:
         raise HTTPException(404, f"Unknown branch '{branch_id}'")
     q = Query(month=parse_month(month), source=parse_source(source), branch_id=branch_id)
     branch = store.branches[branch_id]
-    managers = [r for r in store.reps_by_branch.get(branch_id, []) if r.role == "branch_manager"]
     return {
         "scope": {
             "level": "branch",
             "branch_id": branch_id,
             "branch_name": branch.name,
             "city": branch.city,
-            "team_lead": managers[0].name if managers else None,
-            "team_size": sum(1 for r in store.reps_by_branch.get(branch_id, []) if r.role == "sales_officer"),
             "month": q.month or "all",
             "source": q.source,
         },
@@ -134,6 +133,8 @@ def branch_detail(
         "funnel": _funnel_block(period_leads(store, q)),
         "trend": metrics.trend(store, q),
         "branch_comparison": metrics.branch_comparison(store, q),
+        "lost_reasons": metrics.lost_reasons_breakdown(store, q),
+        "delivery_delays": metrics.delivery_delays_breakdown(store, q),
     }
 
 
@@ -153,7 +154,7 @@ def rep_detail(
         rep_id=rep_id,
     )
     lead_list = sorted(
-        (serialize_lead(l, store.as_of) for l in period_leads(store, q)),
+        (serialize_lead(l, store.as_of) for l in _scoped_no_date(store, q)),
         key=lambda d: d["last_activity_at"],
         reverse=True,
     )
@@ -190,6 +191,61 @@ def insights(
     return insights_mod.insights_panel(store, q, threshold_days)
 
 
+def _scoped_no_date(store, q: Query):
+    from dealerpulse.filters import scoped_leads
+
+    return scoped_leads(store, q)
+
+
+@api.get("/leaderboard")
+def leaderboard(
+    month: str = MonthParam,
+    branch: str | None = Q(default=None),
+) -> dict:
+    """Full sales officer leaderboard with ratings, volume, revenue, and conversion."""
+    store = get_store()
+    q = Query(month=parse_month(month), branch_id=branch)
+    reps_data = rankings.rank_sales_reps(store, q)
+    return {
+        "reps": reps_data,
+        "sales_reps": reps_data,
+        "total_reps": len(reps_data),
+        "month": q.month or "all",
+    }
+
+
+@api.get("/leads")
+def leads_list(
+    month: str = MonthParam,
+    branch: str | None = Q(default=None),
+    stage: str | None = Q(default=None),
+    source: str | None = SourceParam,
+) -> dict:
+    """All leads with full details, days in stage, rep and branch names."""
+    store = get_store()
+    q = Query(
+        month=parse_month(month),
+        branch_id=branch,
+        source=parse_source(source),
+    )
+    leads_subset = period_leads(store, q)
+    if stage:
+        leads_subset = [l for l in leads_subset if l.status == stage]
+    serialized = []
+    for lead in leads_subset:
+        d = serialize_lead(lead, store.as_of)
+        rep = store.reps.get(lead.assigned_to)
+        branch = store.branches.get(lead.branch_id)
+        d["rep_name"] = rep.name if rep else lead.assigned_to
+        d["branch_name"] = branch.name if branch else lead.branch_id
+        serialized.append(d)
+    return {
+        "leads": serialized,
+        "count": len(serialized),
+        "total_dataset_leads": len(store.leads),
+    }
+
+
 @app.get("/api")
 @app.get("/api/health")
 def health() -> dict:
@@ -198,3 +254,4 @@ def health() -> dict:
 
 
 app.include_router(api)
+

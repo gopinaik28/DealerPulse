@@ -82,27 +82,6 @@ def delivered_leads(store: Store, q: Query) -> list[Lead]:
     return out
 
 
-def resolved_leads(store: Store, q: Query) -> list[Lead]:
-    """Leads in scope that reached a terminal state (delivered/lost) inside the selected month.
-
-    This is the denominator for a period conversion rate: "of the deals decided this
-    month, how many did we win?" – stable month to month, unlike a created_at basis
-    where a lead that arrived on the 30th hasn't had a chance to convert.
-    """
-    leads = scoped_leads(store, q)
-    out: list[Lead] = []
-    for lead in leads:
-        if lead.resolved_at is None:
-            continue
-        if q.month is None:
-            out.append(lead)
-            continue
-        start, end = month_bounds(q.month)
-        if start <= lead.resolved_at < end:
-            out.append(lead)
-    return out
-
-
 def target_months(q: Query) -> list[str] | None:
     """Months whose targets are in scope: one month, or ``None`` = all seven."""
     return None if q.month is None else [q.month]

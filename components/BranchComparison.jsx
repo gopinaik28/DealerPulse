@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Card, CardHeader, SegmentedControl, StatusPill } from "@/components/ui";
+import { Card, CardHeader, StatusPill } from "@/components/ui";
 import { EmptyState } from "@/components/states";
+import { SegmentedControl } from "@/components/ui";
+import { useState } from "react";
 import { useFilters } from "@/lib/useFilters";
 import { inr, num, pct } from "@/lib/format";
 
@@ -27,9 +28,7 @@ export function BranchComparison({ rows, currentBranch, title = "Branch attainme
   }
 
   const key = metric === "units" ? "attainment_units" : "attainment_revenue";
-  // Bars are drawn on a true 0–100% scale (not normalised to the leader) so the
-  // group's distance from target reads honestly at a glance.
-  const scaleMax = Math.max(0.25, ...rows.map((r) => r[key])) * 1.05;
+  const maxAtt = Math.max(0.001, ...rows.map((r) => r[key]));
 
   return (
     <Card>
@@ -47,39 +46,43 @@ export function BranchComparison({ rows, currentBranch, title = "Branch attainme
           />
         }
       />
-      <div className="divide-y divide-line">
+      <div className="divide-y divide-line/60">
         {rows.map((r) => {
           const att = r[key];
           const isCurrent = r.branch_id === currentBranch;
-          const barColor =
-            r.status === "on_track" ? "bg-good" : r.status === "behind" ? "bg-warn" : "bg-bad";
+          const barGradient =
+            r.status === "on_track"
+              ? "bg-gradient-to-r from-emerald-500 to-teal-400"
+              : r.status === "behind"
+              ? "bg-gradient-to-r from-amber-500 to-yellow-400"
+              : "bg-gradient-to-r from-blue-600 via-sky-500 to-cyan-400";
           return (
             <Link
               key={r.branch_id}
               href={withFilters(`/branches/${r.branch_id}`)}
-              className={`group flex items-center gap-4 px-5 py-3.5 transition hover:bg-canvas ${
-                isCurrent ? "bg-accent-soft/60" : ""
+              className={`group flex items-center gap-4 px-5 py-3.5 transition hover:bg-cardHover ${
+                isCurrent ? "bg-accent/10 border-l-2 border-accent" : ""
               }`}
             >
               <div className="w-40 shrink-0">
-                <div className="flex items-center gap-2 text-sm font-medium text-ink">
+                <div className="flex items-center gap-2 text-sm font-semibold text-ink group-hover:text-accent transition">
                   {r.name}
-                  {isCurrent && <span className="text-[10px] font-semibold text-accent">VIEWING</span>}
+                  {isCurrent && <span className="text-[10px] font-bold text-accent px-1.5 py-0.5 rounded bg-accent/20">CURRENT</span>}
                 </div>
                 <div className="text-xs text-ink-faint">{r.city}</div>
               </div>
 
               <div className="flex flex-1 items-center gap-3">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-line">
+                <div className="h-2 flex-1 overflow-hidden rounded-full bg-line/80 shadow-inner">
                   <div
-                    className={`h-full rounded-full ${barColor}`}
-                    style={{ width: `${Math.max(1.5, Math.min(100, (att / scaleMax) * 100))}%` }}
+                    className={`h-full rounded-full ${barGradient} transition-all duration-500`}
+                    style={{ width: `${Math.max(2, (att / maxAtt) * 100)}%` }}
                   />
                 </div>
-                <div className="nums w-12 text-right text-sm font-semibold text-ink">{pct(att)}</div>
+                <div className="nums w-12 text-right text-sm font-bold text-ink">{pct(att)}</div>
               </div>
 
-              <div className="nums hidden w-28 text-right text-xs text-ink-soft sm:block">
+              <div className="nums hidden w-28 text-right text-xs text-ink-soft sm:block font-medium">
                 {metric === "units"
                   ? `${num(r.units_delivered)} / ${num(r.target_units)}`
                   : `${inr(r.revenue_delivered)} / ${inr(r.target_revenue)}`}
@@ -88,7 +91,7 @@ export function BranchComparison({ rows, currentBranch, title = "Branch attainme
                 <StatusPill status={r.status} />
               </div>
               <svg
-                className="h-4 w-4 shrink-0 text-ink-faint transition group-hover:translate-x-0.5 group-hover:text-ink"
+                className="h-4 w-4 shrink-0 text-ink-faint transition group-hover:translate-x-1 group-hover:text-accent"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"

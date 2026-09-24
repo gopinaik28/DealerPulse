@@ -21,7 +21,7 @@
 
 @layer components {
   .card {
-    @apply rounded-xl border border-line bg-white shadow-card;
+    @apply rounded-xl border border-line/80 bg-card shadow-card transition duration-150;
   }
   .card-pad {
     @apply p-5;
@@ -30,10 +30,10 @@
     @apply text-[11px] font-semibold uppercase tracking-wider text-ink-faint;
   }
   .pill {
-    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium;
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium backdrop-blur-sm;
   }
   .skeleton {
-    @apply animate-pulse rounded-md bg-line/70;
+    @apply animate-pulse rounded-md bg-line/60;
   }
   .focus-ring {
     @apply outline-none ring-accent/40 focus-visible:ring-2;
@@ -47,5 +47,5 @@
 }
 .recharts-cartesian-axis-tick-value {
   font-size: 11px;
-  fill: #94a3b8;
+  fill: #64748b;
 }

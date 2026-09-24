@@ -95,7 +95,6 @@ class Lead:
     # Derived at load time.
     stage_reached: dict[str, datetime] = field(default_factory=dict)
     delivery: Delivery | None = None
-    resolved_at: datetime | None = None  # when the lead reached a terminal state (delivered/lost)
 
     @property
     def is_open(self) -> bool:
@@ -138,13 +137,6 @@ def build_lead(raw: dict) -> Lead:
         stage_reached.setdefault(event.status, event.timestamp)
 
     expected_close = raw.get("expected_close_date")
-
-    resolved_at: datetime | None = None
-    if raw["status"] == "lost":
-        resolved_at = stage_reached.get("lost") or parse_ts(raw["last_activity_at"])
-    elif raw["status"] == "delivered":
-        resolved_at = stage_reached.get("delivered") or parse_ts(raw["last_activity_at"])
-
     return Lead(
         id=raw["id"],
         customer_name=raw["customer_name"],
@@ -161,7 +153,6 @@ def build_lead(raw: dict) -> Lead:
         deal_value=raw["deal_value"],
         lost_reason=raw.get("lost_reason"),
         stage_reached=stage_reached,
-        resolved_at=resolved_at,
     )
 
 

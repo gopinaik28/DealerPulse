@@ -69,15 +69,17 @@ export default function RepPage({ params }) {
               }
             />
           ) : (
-            <div className="space-y-6">
-              <div className="lg:max-w-2xl">
+            <div className="grid gap-6 lg:grid-cols-12">
+              <div className="lg:col-span-5">
                 <FunnelChart
                   funnel={data.funnel}
                   title="Rep funnel"
                   subtitle={`Leads created in ${monthLabel(query.month)}`}
                 />
               </div>
-              <LeadTable leads={data.leads} />
+              <div className="lg:col-span-7">
+                <LeadTable leads={data.leads} />
+              </div>
             </div>
           )}
         </>

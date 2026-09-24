@@ -20,7 +20,7 @@ export function Breadcrumbs({ trail }) {
             {last || !item.href ? (
               <span className="font-semibold text-ink">{item.label}</span>
             ) : (
-              <Link href={withFilters(item.href)} className="text-ink-soft hover:text-ink hover:underline">
+              <Link href={withFilters(item.href)} className="text-ink-soft hover:text-accent font-medium transition">
                 {item.label}
               </Link>
             )}

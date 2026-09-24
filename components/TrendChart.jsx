@@ -61,24 +61,24 @@ export function TrendChart({ trend, title = "Monthly delivery trend", showTarget
                 tickFormatter={(v) => (metric === "units" ? v : inr(v, { decimals: 0 }))}
               />
               <Tooltip
-                cursor={{ fill: "rgba(15,23,42,0.04)" }}
+                cursor={{ fill: "rgba(56, 189, 248, 0.05)" }}
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null;
                   const row = payload[0].payload;
                   return (
-                    <div className="rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-pop">
-                      <div className="font-semibold text-ink">{monthLabel(row.month)}</div>
-                      <div className="mt-1 flex items-center justify-between gap-6">
+                    <div className="rounded-xl border border-line bg-card/95 backdrop-blur-md px-3.5 py-2.5 text-xs shadow-xl">
+                      <div className="font-semibold text-ink border-b border-line pb-1.5 mb-1.5">{monthLabel(row.month)}</div>
+                      <div className="flex items-center justify-between gap-6 py-0.5">
                         <span className="text-ink-soft">Delivered</span>
-                        <span className="nums font-semibold text-accent">{fmt(row[actualKey])}</span>
+                        <span className="nums font-bold text-accent">{fmt(row[actualKey])}</span>
                       </div>
                       {showTarget && (
-                        <div className="flex items-center justify-between gap-6">
+                        <div className="flex items-center justify-between gap-6 py-0.5">
                           <span className="text-ink-soft">Target</span>
                           <span className="nums font-medium text-ink-soft">{fmt(row[targetKey])}</span>
                         </div>
                       )}
-                      <div className="flex items-center justify-between gap-6">
+                      <div className="flex items-center justify-between gap-6 py-0.5">
                         <span className="text-ink-soft">Orders placed</span>
                         <span className="nums font-medium text-ink-soft">{num(row.orders_placed)}</span>
                       </div>
@@ -86,13 +86,7 @@ export function TrendChart({ trend, title = "Monthly delivery trend", showTarget
                   );
                 }}
               />
-              <Bar
-                dataKey={actualKey}
-                fill={CHART.actual}
-                radius={[4, 4, 0, 0]}
-                maxBarSize={36}
-                isAnimationActive={false}
-              />
+              <Bar dataKey={actualKey} fill={CHART.actual} radius={[4, 4, 0, 0]} maxBarSize={36} />
               {showTarget && (
                 <Line
                   type="monotone"
@@ -100,20 +94,19 @@ export function TrendChart({ trend, title = "Monthly delivery trend", showTarget
                   stroke={CHART.target}
                   strokeWidth={2}
                   strokeDasharray="4 4"
-                  dot={false}
-                  isAnimationActive={false}
+                  dot={{ r: 3, fill: CHART.target }}
                 />
               )}
             </ComposedChart>
           </ResponsiveContainer>
         )}
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-ink-faint">
+        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1.5 border-t border-line/50 pt-3 text-[11px] text-ink-faint">
           <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-sm" style={{ background: CHART.actual }} /> Delivered
+            <span className="h-2.5 w-2.5 rounded-sm bg-accent" /> Delivered Actuals
           </span>
           {showTarget && (
             <span className="flex items-center gap-1.5">
-              <span className="h-0 w-3 border-t-2 border-dashed" style={{ borderColor: CHART.target }} /> Target
+              <span className="h-0 w-3.5 border-t-2 border-dashed border-ink-faint" /> Target
             </span>
           )}
         </div>

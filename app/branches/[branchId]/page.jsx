@@ -7,6 +7,7 @@ import { BranchComparison } from "@/components/BranchComparison";
 import { FunnelChart } from "@/components/FunnelChart";
 import { TrendChart } from "@/components/TrendChart";
 import { RepTable } from "@/components/RepTable";
+import { LostAndDeliveryInsights } from "@/components/LostAndDeliveryInsights";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { CardSkeleton, ChartSkeleton, ErrorState } from "@/components/states";
 import { KpiGrid } from "@/components/KpiCard";
@@ -71,6 +72,7 @@ export default function BranchPage({ params }) {
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="space-y-6 lg:col-span-8">
               <RepTable reps={data.rep_ranking} branchId={branchId} />
+              <LostAndDeliveryInsights lostReasons={data.lost_reasons} deliveryDelays={data.delivery_delays} />
               <FunnelChart
                 funnel={data.funnel}
                 title="Branch funnel"
@@ -84,7 +86,9 @@ export default function BranchPage({ params }) {
               />
             </div>
             <aside className="lg:col-span-4">
-              <InsightsPanel branch={branchId} />
+              <div className="lg:sticky lg:top-[132px]">
+                <InsightsPanel branch={branchId} />
+              </div>
             </aside>
           </div>
         </>

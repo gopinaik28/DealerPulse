@@ -98,6 +98,20 @@ def stale_leads(store: Store, q: Query, threshold_days: int = DEFAULT_STALE_DAYS
             "deal_value": o.deal_value,
         }
 
+    samples = [
+        {
+            "lead_id": l.id,
+            "customer_name": l.customer_name,
+            "rep_name": store.rep_name(l.assigned_to),
+            "branch_id": l.branch_id,
+            "branch_name": store.branch_name(l.branch_id),
+            "current_stage": l.status,
+            "days_stale": int(days_since_activity(l, store.as_of)),
+            "deal_value": l.deal_value,
+        }
+        for l in sorted(candidates, key=lambda x: -days_since_activity(x, store.as_of))
+    ]
+
     return {
         "threshold_days": threshold_days,
         "total": len(candidates),
@@ -105,6 +119,7 @@ def stale_leads(store: Store, q: Query, threshold_days: int = DEFAULT_STALE_DAYS
         "by_branch": sorted(by_branch.values(), key=lambda x: -x["count"]),
         "by_rep": sorted(by_rep.values(), key=lambda x: -x["count"])[:8],
         "oldest": oldest,
+        "samples": samples,
     }
 
 

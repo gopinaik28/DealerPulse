@@ -21,7 +21,6 @@ venv/
 .vercel
 
 # misc
-Claude code prompt*
 .DS_Store
 *.pem
 .env*.local

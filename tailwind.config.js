@@ -4,27 +4,37 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        canvas: "#FAFAFA",
+        canvas: "#F8FAFC", // Clean crisp background
+        surface: "#FFFFFF", // Crisp card surface
+        card: "#FFFFFF",
+        cardHover: "#F1F5F9",
         ink: {
-          DEFAULT: "#0F172A",
+          DEFAULT: "#0F172A", // Deep legible navy/slate for text
           soft: "#475569",
           faint: "#94A3B8",
         },
-        line: "#E9EDF2",
+        line: "#E2E8F0", // Subtle elegant borders
         accent: {
-          DEFAULT: "#2563EB",
-          soft: "#EFF4FF",
+          DEFAULT: "#0284C7", // Sharp executive blue
+          hover: "#0369A1",
+          deep: "#075985",
+          soft: "rgba(2, 132, 199, 0.08)",
         },
-        good: { DEFAULT: "#15803D", soft: "#ECFDF3" },
-        warn: { DEFAULT: "#B45309", soft: "#FFF7ED" },
-        bad: { DEFAULT: "#B91C1C", soft: "#FEF2F2" },
+        primary: {
+          DEFAULT: "#2563EB",
+          hover: "#1D4ED8",
+          soft: "rgba(37, 99, 235, 0.08)",
+        },
+        good: { DEFAULT: "#059669", soft: "rgba(5, 150, 105, 0.10)" },
+        warn: { DEFAULT: "#D97706", soft: "rgba(217, 119, 6, 0.10)" },
+        bad: { DEFAULT: "#DC2626", soft: "rgba(220, 38, 38, 0.10)" },
       },
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "-apple-system", "Segoe UI", "Roboto", "sans-serif"],
       },
       boxShadow: {
-        card: "0 1px 2px rgba(15,23,42,0.04), 0 1px 3px rgba(15,23,42,0.06)",
-        pop: "0 4px 12px rgba(15,23,42,0.10)",
+        card: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05)",
+        pop: "0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -4px rgba(0, 0, 0, 0.05)",
       },
       borderRadius: {
         xl: "0.875rem",
