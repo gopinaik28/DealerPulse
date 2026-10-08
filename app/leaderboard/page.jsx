@@ -29,6 +29,7 @@ export default function LeaderboardPage() {
     <div className="space-y-6">
       <ExecutiveBriefing
         monthLabel={monthLabel(query.month)}
+        branches={overviewData?.branch_comparison}
         kpis={overviewData?.kpis}
         onRefresh={refetch}
       />

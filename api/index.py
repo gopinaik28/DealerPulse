@@ -106,6 +106,7 @@ def overview(month: str = MonthParam, source: str | None = SourceParam) -> dict:
         "trend": metrics.trend(store, q),
         "lost_reasons": metrics.lost_reasons_breakdown(store, q),
         "delivery_delays": metrics.delivery_delays_breakdown(store, q),
+        "by_source": metrics.source_breakdown(store, q),
     }
 
 

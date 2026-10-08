@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 
-export function ExecutiveBriefing({ monthLabel, kpis, summary, onRefresh }) {
+import { formatCrores } from "@/lib/format";
+
+export function ExecutiveBriefing({ monthLabel, kpis, branches, stale, summary, onRefresh }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const handleRefresh = () => {
@@ -11,12 +13,13 @@ export function ExecutiveBriefing({ monthLabel, kpis, summary, onRefresh }) {
     setTimeout(() => setIsRefreshing(false), 600);
   };
 
-  const attainment = kpis?.attainment_revenue
-    ? (kpis.attainment_revenue * 100).toFixed(1)
-    : "25.4";
-  const unitsAttainment = kpis?.attainment_units
-    ? (kpis.attainment_units * 100).toFixed(1)
-    : "23.9";
+  const attainment = kpis ? (kpis.attainment_revenue * 100).toFixed(1) : "–";
+  const unitsAttainment = kpis ? (kpis.attainment_units * 100).toFixed(1) : "–";
+
+  // branch_comparison arrives sorted worst attainment first.
+  const worst = branches?.[0];
+  const best = branches?.[branches.length - 1];
+  const pct = (b) => `${(b.attainment_units * 100).toFixed(1)}%`;
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-line bg-surface p-5 shadow-card">
@@ -38,9 +41,8 @@ export function ExecutiveBriefing({ monthLabel, kpis, summary, onRefresh }) {
               <h2 className="text-sm font-semibold tracking-tight text-ink">
                 Executive Intelligence Briefing
               </h2>
-              <span className="inline-flex items-center gap-1 rounded-full border border-good/30 bg-good/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-good">
-                <span className="h-1.5 w-1.5 rounded-full bg-good animate-pulse" />
-                Live Analysis
+              <span className="inline-flex items-center gap-1 rounded-full border border-line bg-canvas px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
+                Data as of Dec 31, 2025
               </span>
             </div>
             <p className="mt-1.5 max-w-4xl text-xs leading-relaxed text-ink-soft">
@@ -51,17 +53,23 @@ export function ExecutiveBriefing({ monthLabel, kpis, summary, onRefresh }) {
                 </>
               ) : (
                 <>
-                  Executive Intelligence Briefing for Dealership Network: Current retail velocity
-                  is performing at{" "}
-                  <strong className="font-semibold text-ink">{unitsAttainment}% of unit quota</strong>{" "}
-                  ({attainment}% revenue attainment) across {monthLabel}. Top conversion centers remain
-                  Mumbai Eastside & Bangalore Lakeside hand-off triage.{" "}
-                  <span className="text-amber">
-                    Note: 27 stalled leads in high-interest stages require immediate triage to prevent
-                    drop-off.
-                  </span>{" "}
-                  Applying disciplined follow-up suggests an estimated upside of{" "}
-                  <strong className="font-semibold text-ink">₹6.28 Cr</strong> in pipeline recovery.
+                  The group delivered{" "}
+                  <strong className="font-semibold text-ink">{unitsAttainment}% of its unit target</strong>{" "}
+                  ({attainment}% of revenue target) in {monthLabel}.{" "}
+                  {best && worst && best !== worst && (
+                    <>
+                      Strongest branch: <strong className="font-semibold text-ink">{best.name}</strong> (
+                      {best.city}, {pct(best)}). Needs attention:{" "}
+                      <strong className="font-semibold text-bad">{worst.name}</strong> ({worst.city},{" "}
+                      {pct(worst)}).{" "}
+                    </>
+                  )}
+                  {stale?.total > 0 && (
+                    <span className="text-amber">
+                      {stale.total} open deals ({formatCrores(stale.value_at_risk)}) have had no movement in
+                      14+ days.
+                    </span>
+                  )}
                 </>
               )}
             </p>

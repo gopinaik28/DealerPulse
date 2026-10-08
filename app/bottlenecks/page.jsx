@@ -29,6 +29,8 @@ export default function BottlenecksPage() {
     <div className="space-y-6">
       <ExecutiveBriefing
         monthLabel={monthLabel(query.month)}
+        branches={overviewData?.branch_comparison}
+        stale={insightsData?.stale_leads}
         kpis={overviewData?.kpis}
         onRefresh={refetch}
       />

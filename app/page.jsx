@@ -53,6 +53,7 @@ export default function OverviewPage() {
       {/* 1. Executive Briefing Hero */}
       <ExecutiveBriefing
         monthLabel={monthLabel(query.month)}
+        branches={overviewData?.branch_comparison}
         kpis={overviewData?.kpis}
         summary={dynamicSummary}
         onRefresh={handleRefresh}
@@ -106,7 +107,7 @@ export default function OverviewPage() {
               />
             </div>
             <div className="lg:col-span-5">
-              <LeadSourceROI />
+              <LeadSourceROI sources={overviewData.by_source} />
             </div>
           </div>
 

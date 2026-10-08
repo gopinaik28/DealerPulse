@@ -19,6 +19,7 @@ export default function BranchesPage() {
     <div className="space-y-6">
       <ExecutiveBriefing
         monthLabel={monthLabel(query.month)}
+        branches={data?.branch_comparison}
         kpis={data?.kpis}
         onRefresh={refetch}
       />

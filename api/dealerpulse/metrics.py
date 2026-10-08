@@ -272,3 +272,30 @@ def delivery_delays_breakdown(store: Store, q: Query) -> dict:
 
 def _in_month(dt, month: str) -> bool:
     return f"{dt.year:04d}-{dt.month:02d}" == month
+
+
+def source_breakdown(store: Store, q: Query) -> list[dict]:
+    """Win rate per lead source for leads created in the period, best first.
+
+    Ignores ``q.source`` (this is always the cross-source comparison) but honors
+    ``q.month`` and scope. Win rate = delivered / (delivered + lost); open leads excluded.
+    """
+    from .models import LEAD_SOURCES
+
+    rows: list[dict] = []
+    for src in LEAD_SOURCES:
+        pop = period_leads(store, Query(month=q.month, source=src, branch_id=q.branch_id, rep_id=q.rep_id))
+        won = sum(1 for l in pop if l.is_delivered)
+        lost = sum(1 for l in pop if l.is_lost)
+        closed = won + lost
+        rows.append(
+            {
+                "source": src,
+                "total_leads": len(pop),
+                "delivered": won,
+                "lost": lost,
+                "win_rate": round(won / closed, 4) if closed else 0.0,
+            }
+        )
+    rows.sort(key=lambda r: r["win_rate"], reverse=True)
+    return rows
