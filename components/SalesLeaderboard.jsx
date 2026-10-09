@@ -8,6 +8,7 @@ export function SalesLeaderboard({ reps = [] }) {
   // Sort state: default by deals closed descending
   const [sortKey, setSortKey] = useState("deals");
   const [sortDir, setSortDir] = useState("desc");
+  const [roleFilter, setRoleFilter] = useState("sales_officer"); // "sales_officer" | "all"
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -18,8 +19,15 @@ export function SalesLeaderboard({ reps = [] }) {
     }
   };
 
+  const filteredReps = useMemo(() => {
+    if (roleFilter === "sales_officer") {
+      return reps.filter((r) => r.role === "sales_officer");
+    }
+    return reps;
+  }, [reps, roleFilter]);
+
   const sortedReps = useMemo(() => {
-    const list = [...reps];
+    const list = [...filteredReps];
     return list.sort((a, b) => {
       let valA = 0;
       let valB = 0;
@@ -42,7 +50,7 @@ export function SalesLeaderboard({ reps = [] }) {
       if (valA > valB) return sortDir === "asc" ? 1 : -1;
       return 0;
     });
-  }, [reps, sortKey, sortDir]);
+  }, [filteredReps, sortKey, sortDir]);
 
   const renderSortIndicator = (key) => {
     if (sortKey !== key) {
@@ -59,13 +67,39 @@ export function SalesLeaderboard({ reps = [] }) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight text-ink">
-          Sales Representative Leaderboard
-        </h2>
-        <p className="text-xs text-ink-soft">
-          Individual performance tracking across quota-carrying sales officers in all branches (click headers to sort)
-        </p>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight text-ink">
+            Sales Representative Leaderboard
+          </h2>
+          <p className="text-xs text-ink-soft">
+            Individual performance tracking across quota-carrying sales officers in all branches (click headers to sort)
+          </p>
+        </div>
+
+        {/* Role Toggle */}
+        <div className="inline-flex rounded-lg border border-line bg-canvas p-0.5 text-xs self-start sm:self-auto">
+          <button
+            onClick={() => setRoleFilter("sales_officer")}
+            className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+              roleFilter === "sales_officer"
+                ? "bg-surface font-semibold text-ink shadow-sm"
+                : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            Sales Officers ({reps.filter((r) => r.role === "sales_officer").length})
+          </button>
+          <button
+            onClick={() => setRoleFilter("all")}
+            className={`rounded-md px-2.5 py-1 font-medium transition-colors ${
+              roleFilter === "all"
+                ? "bg-surface font-semibold text-ink shadow-sm"
+                : "text-ink-soft hover:text-ink"
+            }`}
+          >
+            All Staff ({reps.length})
+          </button>
+        </div>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-card">
@@ -141,8 +175,14 @@ export function SalesLeaderboard({ reps = [] }) {
                       {r.branch_name}
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="rounded-full border border-line bg-canvas px-2 py-0.5 text-[10px] font-medium text-ink-soft">
-                        Sales Officer
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${
+                          r.role === "branch_manager"
+                            ? "border-accent/40 bg-accent/10 text-accent font-semibold"
+                            : "border-line bg-canvas text-ink-soft"
+                        }`}
+                      >
+                        {r.role === "branch_manager" ? "Branch Manager" : "Sales Officer"}
                       </span>
                     </td>
                     <td className="nums px-4 py-3.5 text-right font-semibold text-accent">
